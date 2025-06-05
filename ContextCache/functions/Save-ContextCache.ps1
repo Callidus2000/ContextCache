@@ -1,49 +1,49 @@
 ﻿function Save-ContextCache {
     <#
         .SYNOPSIS
-        Speichert Variablen und Parameter aus dem Scope der aufrufenden Funktion im PSFTaskEngineCache.
+        Saves variables and parameters from the calling function's scope into the PSFTaskEngineCache.
 
         .DESCRIPTION
-        Diese Funktion extrahiert Variablen und Parameter aus dem Scope der aufrufenden Funktion
-        und speichert sie als Hashtable im PSFTaskEngineCache. Optional kann die Auswahl der Variablen
-        über Include- und Exclude-Listen gesteuert werden. Der CacheKey und der Modulname können
-        angegeben werden.
+        This function extracts variables and parameters from the calling function's scope
+        and stores them as a hashtable in the PSFTaskEngineCache. Optionally, the selection of variables
+        can be controlled via include and exclude lists. The cache key and module name can be specified.
 
         .PARAMETER CacheKey
-        Schlüsselname, unter dem die Variablen gespeichert werden.
+        The key under which the variables will be stored.
 
         .PARAMETER CurrentVariables
-        Array aller zu speichernden Variablen, können über 'Get-Variable -Scope Local' ermittelt werden
+        Array of all variables to be saved, can be retrieved using 'Get-Variable -Scope Local'.
 
         .PARAMETER Include
-        Liste von Variablennamen, die explizit gespeichert werden sollen.
+        List of variable names to explicitly include in the cache.
 
         .PARAMETER Exclude
-        Liste von Variablennamen, die vom Speichern ausgeschlossen werden sollen.
+        List of variable names to exclude from the cache.
 
         .PARAMETER ModuleName
-        Name des Moduls, unter dem der Cache gespeichert wird. Standardwert ist der aktuelle
-        Modulname, falls vorhanden, sonst '<unknown>'.
+        Name of the module under which the cache is stored. Defaults to the current
+        module name if available, otherwise '<unknown>'.
+
+        .PARAMETER FunctionName
+        Name of the function whose parameters should be saved.
 
         .EXAMPLE
         Save-ContextCache -CacheKey 'foo' -Include @('A','C') -CurrentVariables (Get-Variable -Scope Local)
 
-        Speichert die Variablen A und C aus den aktuellen Scope im Cache unter dem Schlüssel 'foo'.
+        Saves variables A and C from the current scope into the cache under the key 'foo'.
 
         .EXAMPLE
-        Restore-ContextCache -CacheKey 'foo' -CurrentVariables (Get-Variable -Scope Local) -FunctionName 'Test-Foo'
+        Save-ContextCache -CacheKey 'foo' -CurrentVariables (Get-Variable -Scope Local) -FunctionName 'Test-Foo'
 
-        Speichert die Variablen in den Cache, die als Parameter bei der Funktion 'Test-Foo' verwendet werden
-
+        Saves the parameters used in the function 'Test-Foo' into the cache.
     #>
+
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
         [string]$CacheKey,
         [Parameter(Mandatory)]
         $CurrentVariables,
-        # [Parameter(Mandatory)]
-        # $BoundParameters,
         [Parameter(Mandatory = $false, ParameterSetName = 'includeExclude')]
         [string[]]$Include,
         [Parameter(Mandatory = $false, ParameterSetName = 'includeExclude')]
@@ -52,28 +52,33 @@
         [Parameter(Mandatory, ParameterSetName = 'FunctionReference')]
         [string]$FunctionName
     )
-    # Hole alle Variablen und Parameter aus dem Scope der aufrufenden Funktion
-    $callerVars = $CurrentVariables
-    if ($FunctionName){
-        $Include=(Get-Command $FunctionName).Parameters.Keys
-        Write-PSFMessage -Level Host -Message "Sichere nur die Parameter der Function $FunctionName"
+    if ($FunctionName) {
+        $Include = (Get-Command $FunctionName).Parameters.Keys
+        Write-PSFMessage -Level Host -Message "Saving only the parameters of the function $FunctionName"
     }
-    # Erstelle die Hashtable
+
+    # Create the hashtable
     $result = @{}
-    foreach ($var in $callerVars) {
+    foreach ($var in $CurrentVariables) {
         $name = $var.Name
         Write-PSFMessage $name -Level Verbose
         if ($Include -and $name -notin $Include) { continue }
         if ($Exclude -and $name -in $Exclude) { continue }
         $result[$name] = $var.Value
     }
+
     $currentModuleName = if ($ModuleName) { $ModuleName } else { $MyInvocation.MyCommand.ModuleName }
     if (-not $currentModuleName) {
         $currentModuleName = '<unknown>'
-        Write-PSFMessage -Level Verbose -Message "Kein Modulname gefunden, verwende '<unknown>'"
+        Write-PSFMessage -Level Verbose -Message "No module name found, using '<unknown>'"
     }
-    Write-PSFMessage -Level Host -Message "In $currentModuleName.$CacheKey gespeicherte Variablen: $($result.Keys -join ', ')"
-    Write-PSFMessage -Level Host -Message "Abrufbar über 'Get-PSFTaskEngineCache -Name $CacheKey -Module $currentModuleName'"
+
+    Write-PSFMessage -Level Host -Message "Variables stored in $currentModuleName.$CacheKey: $($result.Keys -join ', ')"
+    Write-PSFMessage -Level Host -Message "Retrievable via 'Get-PSFTaskEngineCache -Name $CacheKey -Module $currentModuleName' as a HashTable"
+    $restoreCommand = "Restore-ContextCache -CacheKey $CacheKey -Module $currentModuleName" + ($null -eq $FunctionName ? "" : "[-FunctionName $FunctionName]")
+    Write-PSFMessage -Level Host -Message "Retrievable via '$restoreCommand' as global variables"
+
     Set-PSFTaskEngineCache -Name $CacheKey -Value $result -Module $currentModuleName
+
 }
 

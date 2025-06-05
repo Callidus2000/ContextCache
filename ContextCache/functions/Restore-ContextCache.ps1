@@ -1,35 +1,40 @@
 ﻿function Restore-ContextCache {
     <#
-        .SYNOPSIS
-        Stellt Variablen und Parameter aus dem PSFTaskEngineCache im aktuellen Kontext wieder her.
+    .SYNOPSIS
+    Restores variables and parameters from the PSFTaskEngineCache into the current context.
 
-        .DESCRIPTION
-        Diese Funktion liest Variablen aus dem PSFTaskEngineCache und legt sie im aktuellen Scope an.
-        Optional kann die Auswahl der Variablen über Include- und Exclude-Listen gesteuert werden.
-        Der CacheKey und der Modulname können angegeben werden.
+    .DESCRIPTION
+    This function reads variables from the PSFTaskEngineCache and sets them in the current scope.
+    Optionally, the selection of variables can be controlled via include and exclude lists.
+    The cache key and module name can be specified.
 
-        .PARAMETER CacheKey
-        Schlüsselname, unter dem die Variablen gespeichert wurden.
+    .PARAMETER CacheKey
+    The key under which the variables were stored.
 
-        .PARAMETER Include
-        Liste von Variablennamen, die explizit wiederhergestellt werden sollen.
+    .PARAMETER Include
+    List of variable names to explicitly restore.
 
-        .PARAMETER Exclude
-        Liste von Variablennamen, die von der Wiederherstellung ausgeschlossen werden sollen.
+    .PARAMETER Exclude
+    List of variable names to exclude from restoration.
 
-        .PARAMETER ModuleName
-        Name des Moduls, unter dem der Cache gespeichert wurde. Standardwert ist der aktuelle
-        Modulname, falls vorhanden, sonst '<unknown>'.
+    .PARAMETER ModuleName
+    Name of the module under which the cache was stored. Defaults to the current
+    module name if available, otherwise '<unknown>'.
 
-        .EXAMPLE
-        Restore-ContextCache -CacheKey 'foo' -Include @('A','C')
+    .PARAMETER FunctionName
+    Name of the function whose parameters should be restored.
 
-        Stellt die Variablen A und C aus dem Cache im aktuellen Kontext wieder her.
-        .EXAMPLE
-        Restore-ContextCache -CacheKey 'foo' -FunctionName 'Test-Foo'
+    .EXAMPLE
+    Restore-ContextCache -CacheKey 'foo' -Include @('A','C')
 
-        Stellt die Variablen aus dem Cache wieder her, die als Parameter bei der Funktion 'Test-Foo' verwendet werden
+    Restores variables A and C from the cache into the current context.
+
+    .EXAMPLE
+    Restore-ContextCache -CacheKey 'foo' -FunctionName 'Test-Foo'
+
+    Restores the parameters used in the function 'Test-Foo' from the cache.
     #>
+
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
@@ -57,8 +62,6 @@
     $restoreVars = $cache.Keys | Where-Object { $_ -in $Include -or -not $Include } | Where-Object { $_ -notin $Exclude }
     Write-PSFMessage -Level Host -Message "Stelle Variablen aus $currentModuleName.$CacheKey wieder her: $($restoreVars -join ', ')"
     foreach ($name in $restoreVars) {
-        # if ($Include -and $name -notin $Include) { continue }
-        # if ($Exclude -and $name -in $Exclude) { continue }
         $value = $cache[$name]
         Write-PSFMessage -Level Verbose -Message "Setze $name auf $value"
         Set-Variable -Name $name -Value $value -Force -ErrorAction Continue -Scope Global
