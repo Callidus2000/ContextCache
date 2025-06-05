@@ -39,7 +39,7 @@
     param(
         [Parameter(Mandatory)]
         [string]$CacheKey,
-        [Parameter(Mandatory=$false, ParameterSetName = 'includeExclude')]
+        [Parameter(Mandatory = $false, ParameterSetName = 'includeExclude')]
         [string[]]$Include,
         [Parameter(Mandatory = $false, ParameterSetName = 'includeExclude')]
         [string[]]$Exclude,
@@ -47,24 +47,39 @@
         [Parameter(Mandatory, ParameterSetName = 'FunctionReference')]
         [string]$FunctionName
     )
+    # Determine the current module name
     $currentModuleName = if ($ModuleName) { $ModuleName } else { $MyInvocation.MyCommand.ModuleName }
     if (-not $currentModuleName) { $currentModuleName = '<unknown>' }
+
+    # Retrieve the cached variables
     $cache = Get-PSFTaskEngineCache -Name $CacheKey -Module $currentModuleName
     if (-not $cache) {
-        Write-PSFMessage -Level Warning -Message "Kein Cache für $currentModuleName.$CacheKey gefunden."
+        Write-PSFMessage -Level Warning -Message "No cache found for $currentModuleName.$CacheKey."
         return
     }
+
+    # If a function name is provided, get its parameters
     if ($FunctionName) {
         $Include = (Get-Command $FunctionName).Parameters.Keys
-        Write-PSFMessage -Level Host -Message "Sichere nur die Parameter der Function $FunctionName"
+        Write-PSFMessage -Level Host -Message "Restoring only the parameters of the function $FunctionName"
     }
+
+    # Exclude read-only and constant variables
     $Exclude += Get-Variable | Where-Object { $_.Options -match 'ReadOnly|Constant' } | Select-Object -ExpandProperty name
+
+    # Determine which variables to restore
     $restoreVars = $cache.Keys | Where-Object { $_ -in $Include -or -not $Include } | Where-Object { $_ -notin $Exclude }
-    Write-PSFMessage -Level Host -Message "Stelle Variablen aus $currentModuleName.$CacheKey wieder her: $($restoreVars -join ', ')"
+
+    # Inform about the variables being restored
+    Write-PSFMessage -Level Host -Message "Restoring variables from $currentModuleName.$($CacheKey): $($restoreVars -join ', ')"
+
+    # Restore each variable
     foreach ($name in $restoreVars) {
         $value = $cache[$name]
-        Write-PSFMessage -Level Verbose -Message "Setze $name auf $value"
+        Write-PSFMessage -Level Verbose -Message "Setting $name to $value"
         Set-Variable -Name $name -Value $value -Force -ErrorAction Continue -Scope Global
     }
-    Write-PSFMessage -Level Host -Message "Wiederhergestellte Variablen aus $currentModuleName.$CacheKey`: $($restoreVars -join ', ')"
+
+    # Final confirmation message
+    Write-PSFMessage -Level Host -Message "Restored variables from $currentModuleName.$($CacheKey): $($restoreVars -join ', ')"
 }
