@@ -3,7 +3,7 @@
 	RootModule = 'ContextCache.psm1'
 
 	# Version number of this module.
-	ModuleVersion = '1.0.0'
+	ModuleVersion = '1.1.0'
 
 	# ID used to uniquely identify this module
 	GUID = '2b9a57ec-4add-4477-8c28-64bb1c96b8ca'
@@ -40,6 +40,7 @@
 
 	# Functions to export from this module
 	FunctionsToExport = @(
+		'Get-ContextCache'
 		'Restore-ContextCache'
 		'Save-ContextCache'
 	)

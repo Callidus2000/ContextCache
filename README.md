@@ -91,7 +91,9 @@ This PowerShell module is designed to save current variables into the Cache of P
 ## Roadmap
 New features will be added if any of my scripts need it ;-)
 
-I cannot guarantee that no breaking change will occur as the development follows my internal DevOps need completely. Likewise I will not insert full documentation of all parameters as I don't have time for this copy&paste. Sorry. But major changes which classify as breaking changes will result in an increment of the major version. See [Changelog](SMAX\changelog.md) for information regarding breaking changes.
+I cannot guarantee that no breaking change will occur as the development follows my internal DevOps need completely. 
+This should not be a problem as the module is designed for adhoc debugging needs and not for permanent use in code.
+See [Changelog](SMAX\changelog.md) for information regarding breaking changes.
 
 See the [open issues](https://github.com/Callidus2000/ContextCache/issues) for a list of proposed features (and known issues).
 

@@ -8,7 +8,7 @@
         and stores them as a hashtable in the PSFTaskEngineCache. Optionally, the selection of variables
         can be controlled via include and exclude lists. The cache key and module name can be specified.
 
-        .PARAMETER CacheKey
+        .PARAMETER Name
         The key under which the variables will be stored.
 
         .PARAMETER CurrentVariables
@@ -20,20 +20,16 @@
         .PARAMETER Exclude
         List of variable names to exclude from the cache.
 
-        .PARAMETER ModuleName
-        Name of the module under which the cache is stored. Defaults to the current
-        module name if available, otherwise '<unknown>'.
-
         .PARAMETER FunctionName
         Name of the function whose parameters should be saved.
 
         .EXAMPLE
-        Save-ContextCache -CacheKey 'foo' -Include @('A','C') -CurrentVariables (Get-Variable -Scope Local)
+        Save-ContextCache -Name 'foo' -Include @('A','C') -CurrentVariables (Get-Variable -Scope Local)
 
         Saves variables A and C from the current scope into the cache under the key 'foo'.
 
         .EXAMPLE
-        Save-ContextCache -CacheKey 'foo' -CurrentVariables (Get-Variable -Scope Local) -FunctionName 'Test-Foo'
+        Save-ContextCache -Name 'foo' -CurrentVariables (Get-Variable -Scope Local) -FunctionName 'Test-Foo'
 
         Saves the parameters used in the function 'Test-Foo' into the cache.
     #>
@@ -41,14 +37,13 @@
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
-        [string]$CacheKey,
+        [string]$Name,
         [Parameter(Mandatory)]
         $CurrentVariables,
         [Parameter(Mandatory = $false, ParameterSetName = 'includeExclude')]
         [string[]]$Include,
         [Parameter(Mandatory = $false, ParameterSetName = 'includeExclude')]
         [string[]]$Exclude,
-        [string]$ModuleName,
         [Parameter(Mandatory, ParameterSetName = 'FunctionReference')]
         [string]$FunctionName
     )
@@ -60,25 +55,30 @@
     # Create the hashtable
     $result = @{}
     foreach ($var in $CurrentVariables) {
-        $name = $var.Name
-        Write-PSFMessage $name -Level Verbose
-        if ($Include -and $name -notin $Include) { continue }
-        if ($Exclude -and $name -in $Exclude) { continue }
-        $result[$name] = $var.Value
+        # Write-PSFMessage $var.Name -Level Verbose
+        if ($Include -and $var.Name -notin $Include) { continue }
+        if ($Exclude -and $var.Name -in $Exclude) { continue }
+        $result[$var.Name] = $var.Value
     }
 
-    $currentModuleName = if ($ModuleName) { $ModuleName } else { $MyInvocation.MyCommand.ModuleName }
-    if (-not $currentModuleName) {
-        $currentModuleName = '<unknown>'
-        Write-PSFMessage -Level Verbose -Message "No module name found, using '<unknown>'"
-    }
 
-    Write-PSFMessage -Level Host -Message "Variables stored in $currentModuleName.$CacheKey: $($result.Keys -join ', ')"
-    Write-PSFMessage -Level Host -Message "Retrievable via 'Get-PSFTaskEngineCache -Name $CacheKey -Module $currentModuleName' as a HashTable"
-    $restoreCommand = "Restore-ContextCache -CacheKey $CacheKey -Module $currentModuleName" + ($null -eq $FunctionName ? "" : "[-FunctionName $FunctionName]")
+    Write-PSFMessage -Level Host -Message "Variables stored in $($Name): $($result.Keys -join ', ')"
+    Write-PSFMessage -Level Host -Message "Retrievable via 'Get-PSFTaskEngineCache -Name $Name -Module ContextCache' as a HashTable"
+    $restoreCommand = "Restore-ContextCache -Name $Name " #+ ($null -eq $FunctionName ? "" : "[-FunctionName $FunctionName]")
     Write-PSFMessage -Level Host -Message "Retrievable via '$restoreCommand' as global variables"
 
-    Set-PSFTaskEngineCache -Name $CacheKey -Value $result -Module $currentModuleName
-
+    Set-PSFTaskEngineCache -Name $Name -Value $result -Module 'ContextCache'
+    $existingCacheKeys=Get-PSFTaskEngineCache -Name "___CACHEKEYS" -Module 'ContextCache'
+    if ($existingCacheKeys -notcontains $Name){
+        $existingCacheKeys+=$Name
+        Write-PSFMessage -Message "Adding Name $Name to TEPP"
+        Write-PSFMessage -Message "`$existingCacheKeys=$existingCacheKeys"
+    }else{
+        Write-PSFMessage -Message "Not adding Name $Name to TEPP, `$existingCacheKeys=$existingCacheKeys"
+    }
+    $cacheVarNames = Get-PSFTaskEngineCache -Name "___CACHEKEYVARNAMES" -Module 'ContextCache'
+    $cacheVarNames.$Name = $result.Keys
+    Set-PSFTaskEngineCache -Name "___CACHEKEYVARNAMES" -Module 'ContextCache' -Value $cacheVarNames
+    Set-PSFTaskEngineCache -Name "___CACHEKEYS" -Module 'ContextCache' -Value $existingCacheKeys
 }
 
