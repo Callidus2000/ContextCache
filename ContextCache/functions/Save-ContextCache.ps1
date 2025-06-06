@@ -63,12 +63,12 @@
 
 
     Write-PSFMessage -Level Host -Message "Variables stored in $($Name): $($result.Keys -join ', ')"
-    Write-PSFMessage -Level Host -Message "Retrievable via 'Get-PSFTaskEngineCache -Name $Name -Module ContextCache' as a HashTable"
+    Write-PSFMessage -Level Host -Message "Retrievable via 'Get-ContextCache -Name $Name' as a HashTable"
     $restoreCommand = "Restore-ContextCache -Name $Name " #+ ($null -eq $FunctionName ? "" : "[-FunctionName $FunctionName]")
     Write-PSFMessage -Level Host -Message "Retrievable via '$restoreCommand' as global variables"
 
     Set-PSFTaskEngineCache -Name $Name -Value $result -Module 'ContextCache'
-    $existingCacheKeys=Get-PSFTaskEngineCache -Name "___CACHEKEYS" -Module 'ContextCache'
+    $existingCacheKeys=[array](Get-PSFTaskEngineCache -Name "___CACHEKEYS" -Module 'ContextCache')
     if ($existingCacheKeys -notcontains $Name){
         $existingCacheKeys+=$Name
         Write-PSFMessage -Message "Adding Name $Name to TEPP"

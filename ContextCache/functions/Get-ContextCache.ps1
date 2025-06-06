@@ -36,7 +36,6 @@
     )
     # Determine the current module name
     # Retrieve the cached variables
-    Get-PSFTaskEngineCache -Name Hubba -Module ContextCache
     $cache = Get-PSFTaskEngineCache -Name $Name -Module "ContextCache"
     Write-PSFMessage -Level Warning -Message "Cache for $Name=$cache"
     if (-not $cache) {
