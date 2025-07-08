@@ -79,7 +79,92 @@
 
 ## PowerShell Module for Context Cache
 
-This PowerShell module is designed to save current variables into the Cache of PSFramework.
+This PowerShell module is designed to save current variables into the Cache of PSFramework. My normal workflow for debugging code is to code in VSC and to test in a seperate PWSH terminal. Sometimes I'd like to get the internal/local variable state to perform adhoc tests with this data. This module helps to get the state of the local variable scope, either by restoring it into a hashtable or to directly initialize the variables in the current (local) scope.
+
+<!-- USAGE EXAMPLES -->
+## Usage Examples
+
+Here is an example of how to use the module and the resulting output:
+
+### Example Code
+
+```powershell
+# Import the module and define a demo function
+Import-Module ContextCache
+function foo {
+    param (
+        [Parameter(Mandatory, Position=0)]
+        $A,
+        [Parameter(Mandatory, Position=1)]
+        $B
+    )
+    Save-ContextCache -Name "JustTheParams" -CurrentVariables (Get-Variable -Scope Local) -FunctionName "foo"
+    $C = $A + $B
+    Save-ContextCache -Name "AllLocalVariables" -CurrentVariables (Get-Variable -Scope Local)
+    Save-ContextCache -Name "JustTheResult" -CurrentVariables (Get-Variable -Scope Local) -Include "C"
+    Save-ContextCache -Name "EveryThingButB" -CurrentVariables (Get-Variable -Scope Local) -Exclude "B"
+    # No return value
+}
+
+# Call the function
+foo 1 2
+
+#Retrieve the different caches and store it for demo purposes
+$cacheContent=@{}
+"AllLocalVariables","JustTheParams", "JustTheResult", "EveryThingButB" | ForEach-Object {
+    $cacheContent.$_ = Get-ContextCache -Name $_
+}
+$cacheContent | ConvertTo-Json -depth 1
+```
+
+This is the content of $cacheContent (limited to the first level):
+
+```json
+{
+  "EveryThingButB": {
+    "PSBoundParameters": "System.Management.Automation.PSBoundParametersDictionary",
+    "PSCmdlet": "System.Management.Automation.PSScriptCmdlet",
+    "PSCommandPath": "",
+    "null": null,
+    "C": 3,
+    "PSScriptRoot": "",
+    "A": 1,
+    "input": "",
+    "MyInvocation": "System.Management.Automation.InvocationInfo"
+  },
+  "JustTheResult": {
+    "C": 3
+  },
+  "JustTheParams": {
+    "A": 1,
+    "B": 2
+  },
+  "AllLocalVariables": {
+    "PSBoundParameters": "System.Management.Automation.PSBoundParametersDictionary",
+    "A": 1,
+    "PSCommandPath": "",
+    "C": 3,
+    "null": null,
+    "PSCmdlet": "System.Management.Automation.PSScriptCmdlet",
+    "PSScriptRoot": "",
+    "B": 2,
+    "input": "",
+    "MyInvocation": "System.Management.Automation.InvocationInfo"
+  }
+}
+```
+
+Another usage would be 
+
+```powershell
+Restore-ContextCache -Name JustTheParams
+Write-Host $B
+```
+
+which initializes the variables $A and $B in the current context. From there on you can manually steptrace through your functions code.
+
+---
+
 
 
 ### Built With
@@ -153,5 +238,4 @@ Project Link: [https://github.com/Callidus2000/ContextCache](https://github.com/
 [issues-url]: https://github.com/Callidus2000/ContextCache/issues
 [license-shield]: https://img.shields.io/github/license/Callidus2000/ContextCache.svg?style=for-the-badge
 [license-url]: https://github.com/Callidus2000/ContextCache/blob/master/LICENSE
-````
 
