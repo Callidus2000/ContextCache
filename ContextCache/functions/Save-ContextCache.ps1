@@ -1,37 +1,38 @@
 ﻿function Save-ContextCache {
     <#
-        .SYNOPSIS
-        Saves variables and parameters from the calling function's scope into the PSFTaskEngineCache.
+    .SYNOPSIS
+    Save variables and parameters from the calling function's scope into the PSFTaskEngineCache for later retrieval or debugging.
 
-        .DESCRIPTION
-        This function extracts variables and parameters from the calling function's scope
-        and stores them as a hashtable in the PSFTaskEngineCache. Optionally, the selection of variables
-        can be controlled via include and exclude lists. The cache key and module name can be specified.
+    .DESCRIPTION
+    This function extracts variables and parameters from the calling function's scope and stores them as a hashtable in the PSFTaskEngineCache (as used by the ContextCache module). It is designed to help you capture the state of the local variable scope for ad-hoc debugging, testing, or later restoration. You can save all variables, or use include/exclude lists to filter which variables are stored. If a function name is provided, only the parameters of that function are saved.
 
-        .PARAMETER Name
-        The key under which the variables will be stored.
+    .PARAMETER Name
+    The key under which the variables will be stored in the cache.
 
-        .PARAMETER CurrentVariables
-        Array of all variables to be saved, can be retrieved using 'Get-Variable -Scope Local'.
+    .PARAMETER CurrentVariables
+    Array of all variables to be saved, can be retrieved using 'Get-Variable -Scope Local'.
 
-        .PARAMETER Include
-        List of variable names to explicitly include in the cache.
+    .PARAMETER Include
+    List of variable names to explicitly include in the cache. If not specified, all variables are considered.
 
-        .PARAMETER Exclude
-        List of variable names to exclude from the cache.
+    .PARAMETER Exclude
+    List of variable names to exclude from the cache.
 
-        .PARAMETER FunctionName
-        Name of the function whose parameters should be saved.
+    .PARAMETER FunctionName
+    Name of the function whose parameters should be saved. If specified, only those parameters are saved.
 
-        .EXAMPLE
-        Save-ContextCache -Name 'foo' -Include @('A','C') -CurrentVariables (Get-Variable -Scope Local)
+    .EXAMPLE
+    Save-ContextCache -Name 'foo' -Include @('A','C') -CurrentVariables (Get-Variable -Scope Local)
 
-        Saves variables A and C from the current scope into the cache under the key 'foo'.
+    Saves variables A and C from the current scope into the cache under the key 'foo'.
 
-        .EXAMPLE
-        Save-ContextCache -Name 'foo' -CurrentVariables (Get-Variable -Scope Local) -FunctionName 'Test-Foo'
+    .EXAMPLE
+    Save-ContextCache -Name 'JustTheParams' -CurrentVariables (Get-Variable -Scope Local) -FunctionName 'foo'
 
-        Saves the parameters used in the function 'Test-Foo' into the cache.
+    Saves the parameters used in the function 'foo' into the cache.
+
+    .NOTES
+    This function is part of the ContextCache module, which is designed to help debug PowerShell code by capturing and restoring variable states. See the module README for more details and usage examples.
     #>
 
     [CmdletBinding()]

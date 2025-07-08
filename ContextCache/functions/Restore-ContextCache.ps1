@@ -1,28 +1,22 @@
 ﻿function Restore-ContextCache {
     <#
     .SYNOPSIS
-    Restores variables and parameters from the PSFTaskEngineCache into the current context.
+    Restore variables from the PSFTaskEngineCache directly into the current scope for ad-hoc debugging and testing.
 
     .DESCRIPTION
-    This function reads variables from the PSFTaskEngineCache and sets them in the current scope.
-    Optionally, the selection of variables can be controlled via include and exclude lists.
-    The cache key and module name can be specified.
+    This function reads variables from the PSFTaskEngineCache (as used by the ContextCache module) and sets them as variables in the current (global) scope. It is designed to help you quickly re-initialize the variable state from a previous function call, so you can manually step through code or perform further debugging. You can restore all variables, or use include/exclude lists to filter which variables are set. If a function name is provided, only the parameters of that function are restored.
 
     .PARAMETER Name
-    The key under which the variables were stored.
+    The key under which the variables were stored in the cache.
 
     .PARAMETER Include
-    List of variable names to explicitly restore.
+    List of variable names to explicitly restore from the cache. If not specified, all variables are considered.
 
     .PARAMETER Exclude
     List of variable names to exclude from restoration.
 
-    .PARAMETER ModuleName
-    Name of the module under which the cache was stored. Defaults to the current
-    module name if available, otherwise '<unknown>'.
-
     .PARAMETER FunctionName
-    Name of the function whose parameters should be restored.
+    Name of the function whose parameters should be restored. If specified, only those parameters are restored.
 
     .EXAMPLE
     Restore-ContextCache -Name 'foo' -Include @('A','C')
@@ -30,9 +24,13 @@
     Restores variables A and C from the cache into the current context.
 
     .EXAMPLE
-    Restore-ContextCache -Name 'foo' -FunctionName 'Test-Foo'
+    Restore-ContextCache -Name 'JustTheParams'
+    Write-Host $B
 
-    Restores the parameters used in the function 'Test-Foo' from the cache.
+    Restores the parameters A and B from the cache and makes them available as variables in the current scope.
+
+    .NOTES
+    This function is part of the ContextCache module, which is designed to help debug PowerShell code by capturing and restoring variable states. See the module README for more details and usage examples.
     #>
 
     [CmdletBinding()]
