@@ -13,7 +13,9 @@
     List of variable names to explicitly restore from the cache. If not specified, all variables are considered.
 
     .PARAMETER Exclude
-    List of variable names to exclude from restoration.
+    List of variable names to exclude from restoration. By default, this includes the values from the configuration key 'ContextCache.Restore.DefaultIgnoreVariables'.
+    This configuration contains common variables that are typically not useful to restore, such as system variables, preferences and read only variables. You can modify this list in your configuration settings if needed.
+    If you need to retrieve all variables, you can use "Get-ContextCache" instead.
 
     .PARAMETER FunctionName
     Name of the function whose parameters should be restored. If specified, only those parameters are restored.
@@ -43,7 +45,7 @@
         [string[]]$Include,
         [Parameter(Mandatory = $false, ParameterSetName = 'includeExclude')]
         [PSFramework.TabExpansion.PsfArgumentCompleterAttribute("ContextCache.VariableNames")]
-        [string[]]$Exclude,
+        [string[]]$Exclude=(get-psfconfigvalue -fullname 'ContextCache.Restore.DefaultIgnoreVariables'),
         [Parameter(Mandatory, ParameterSetName = 'FunctionReference')]
         [string]$FunctionName
     )
