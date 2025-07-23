@@ -30,9 +30,9 @@
 -->
 
   <h3 align="center">Powershell Context Cache Module</h3>
-
   <p align="center">
-    This Powershell Module is a helper module for debugging your Code.
+🔄 Need to access local variables from a PowerShell function without entering a debugging session?
+ContextCache lets you save & restore all local vars at any point in the same terminal. Perfect for ad-hoc testing & step-tracing!
     <br />
     <a href="https://github.com/Callidus2000/ContextCache"><strong>Explore the docs »</strong></a>
     <br />
@@ -42,35 +42,6 @@
     <a href="https://github.com/Callidus2000/ContextCache/issues">Request Feature</a>
   </p>
 </p>
-
-
-
-<!-- TABLE OF CONTENTS -->
-<details open="open">
-  <summary><h2 style="display: inline-block">Table of Contents</h2></summary>
-  <ol>
-    <li>
-      <a href="#about-the-project">About The Project</a>
-      <ul>
-        <li><a href="#built-with">Built With</a></li>
-      </ul>
-    </li>
-    <li>
-      <a href="#getting-started">Getting Started</a>
-      <ul>
-        <li><a href="#prerequisites">Prerequisites</a></li>
-        <li><a href="#installation">Installation</a></li>
-      </ul>
-    </li>
-    <li><a href="#usage">Usage</a></li>
-    <li><a href="#use-cases-or-why-was-the-module-developed">Use-Cases - Why was this module created?</a></li>
-    <li><a href="#roadmap">Roadmap</a></li>
-    <li><a href="#contributing">Contributing</a></li>
-    <li><a href="#license">License</a></li>
-    <li><a href="#contact">Contact</a></li>
-    <li><a href="#acknowledgements">Acknowledgements</a></li>
-  </ol>
-</details>
 
 
 
